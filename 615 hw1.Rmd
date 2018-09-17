@@ -1,0 +1,133 @@
+---
+title: "Notes for Assignment 1"
+author: "Haviland Wright"
+date: "September 15, 2018"
+output:
+  pdf_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+library(knitr)
+library(kableExtra)
+opts_chunk$set(echo = TRUE)
+```
+
+
+## 1 Calculate $p_k$
+
+Given the stated mean value of 2 misprints per page, assume the distribution of $M$, the number of misprints on a page, is $Poisson(\lambda = 2)$ 
+
+Conditioned on $k$, a limit to be determined, the probability $p_k$ of more than $k$ misprints on a page is:  
+
+$p_k = P(M > k) = 1 - P(M \leq k) =$ 1 - ppois($k$, lambda = 2).  
+
+
+## 2 Calculate $P(T \leq n | k)$
+
+Probability of $T$ no more than $n$ pages with more than $k$ misprints is:  
+
+$P(T \leq n) =$ pbinom($n$, 50, $p_k$).  
+
+\vspace{.2in}
+
+## 3 Visualize $P(n \leq k)$
+
+For a given $k$, the probability mass and cumulateive distribution functions of errors per page can be visualized as follows:
+\vspace{.2in}
+```{r }
+
+options(digits = 3)
+options(scipen = 999)
+
+## produce a dataframe containing probabilities
+prob <- as.data.frame(dpois(x = 0:13, lambda = 2))
+prob <- cbind(prob, cumsum(prob)) ## these probabilities = ppois(0:10,lambda=2)
+prob <- cbind(prob, 1 - prob[,2])
+
+colnames(prob) <- c("prob", "cprob", "tail_prob")
+
+## barplot with mass function and CDF
+df.bar <- barplot(prob$prob,  
+                  main="Poisson mass function, lambda = 2",
+                  names.arg = c("0","1","2","3","4","5","6","7","8","9","10","11","12","13"),
+                  xlab = "X: Number of misprints on a page", 
+                  ylab = "Probabilty: P(x)",ylim = c(0,1.1), col="red")
+
+lines(x=df.bar, y=prob$cprob, col="black")
+points(x=df.bar, y=prob$cprob, pch=16, col="blue")
+abline(h=1, lty=2, col = "cyan")
+
+```
+\vspace{.3in}  
+
+## 4 Key Values Table
+
+A table of the first 11 probabilities provides the tail area 
+probabilities, $p_k = P(M > k)$.
+\vspace{.2in}
+
+
+```{r}
+
+k <- 0:13
+
+prob <- cbind(k, prob)
+
+## format data frame for output as a table
+p.tab <- kable(prob)
+kable_styling(p.tab, bootstrap_options = "striped", full_width = FALSE, position = "left")
+
+```
+\newpage
+
+## 5  Visualize  $P(T = n | k = 1, 3, 5)$
+
+In an n rows by k columns table, each column will reflect different parameters
+
+```{r}
+
+# Setup for multiple plots
+par(mfrow=c(3,1))
+
+# calculate probability functions for display, make barplots.
+f1 <- dbinom(x = 0:50, size = 50, prob = .594)
+b1 <- barplot(f1, main="k = 1", axes = TRUE)
+
+
+f3 <- dbinom(x = 0:50, size = 50, prob = .143)
+barplot(f3, main="k = 3")
+
+f5 <- dbinom(x = 0:50, size = 50, prob = .017)
+barplot(f5, main="k = 5")
+
+
+```
+
+
+## 6  Example: Column from n x k table
+
+```{r}
+# explanition for the model 
+
+#when n pages are selected from 50 pages book, it follows binomial distribution. 
+#for calculation of possibility for one pages that has k misprints, 
+#it follows the poisson distribution.
+
+table <- as.data.frame(matrix(ncol = 5,nrow=50, dimnames = list(c(1:50),c(1:5))))
+for ( i in 1:50) {  #loop 1 for the whole 50 pages variable 
+  for (j in 1:5){ #loop 2 for the k = 1,2,3,4,5 
+    
+    p <- ppois(j,lambda = 2,lower.tail = FALSE) 
+    table[i,j] = pbinom(i, size=50, prob=p) 
+  }
+}
+
+# to adjust the table contents 
+kableExtra::kable(digits = 3,x =table,row.names = TRUE)
+
+
+```
+
+
+
